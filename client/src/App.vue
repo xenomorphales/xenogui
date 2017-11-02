@@ -1,12 +1,20 @@
 <template>
   <div id="app">
-    <mt-cell>test</mt-cell>
+    <control></control>
+    <ros></ros>
   </div>
 </template>
 
 <script>
+import ROS from './components/ROS.vue'
+import Control from './components/Control.vue'
+
 export default {
-  name: 'app'
+  name: 'app',
+  components: {
+    'ros': ROS,
+    'control': Control,
+  }
 }
 </script>
 
