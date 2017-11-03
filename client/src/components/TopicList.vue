@@ -1,6 +1,6 @@
 <template>
   <div id="topiclist">
-    <mt-cell v-for="topic in topics" :key="topic.name" :title="topic.name">{{topic.type}}</mt-cell>
+    <mt-cell v-for="topic in topics" :key="topic.name" :title="topic.name">{{topic.data}}</mt-cell>
   </div>
 </template>
 
@@ -10,7 +10,7 @@ export default {
   data() {
       return {
           topics: [
-              {'name':'none','type':undefined}
+              {'name':'none','type':undefined, 'data':undefined}
           ]
       }
   },
@@ -18,7 +18,17 @@ export default {
       var _this = this;
       setInterval(function() {
           _this.$http.get('/topics').then(response => {
-              _this.topics = response.body;
+              var topics = response.body;
+              var ok = 0;
+              for(var t in topics) {
+                  _this.$http.get('/topic/'+topics[t].name).then(response => {
+                      topics[t].data = response.body;
+                      ok++;
+                  }, response => { ok++; });
+              }
+              setTimeout(function() {
+                  _this.topics = topics;
+              }, 1000);
           });
       }, 1000);
   }
