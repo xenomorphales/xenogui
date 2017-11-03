@@ -23,14 +23,18 @@ class TopicsHandler(BaseHandler):
 def make_app():
     client_path = os.getenv('XENOGUI_CLIENT', ".")
     index_path = os.path.join(client_path, "index.html")
-    if not os.path.isfile(index_path):
-        print("WARNING : " + index_path + " file not found")
-    return tornado.web.Application([
+    api_handlers = [
         (r"/nodes", NodesHandler),
         (r"/topics", TopicsHandler),
+    ]
+    web_handlers = [
         (r"/()", tornado.web.StaticFileHandler, {'path': index_path}),
         (r"/(.*)", tornado.web.StaticFileHandler, {'path': client_path}),
-    ])
+    ]
+    if not os.path.isfile(index_path):
+        print("WARNING : " + index_path + " file not found")
+        return tornado.web.Application(api_handlers)
+    return tornado.web.Application(api_handlers + web_handlers)
 
 def main(args=None):
     rclpy.init(args=args)
