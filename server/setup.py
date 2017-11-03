@@ -6,10 +6,9 @@ setup(
     name=package_name,
     version='0.0.1',
     packages=[],
-    py_modules=['test'],
+    py_modules=['server'],
     data_files=[
-        ('share/ament_index/resource_index/packages',
-            ['resource/' + package_name]),
+        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
     install_requires=['setuptools'],
@@ -28,7 +27,7 @@ setup(
     license='GPL',
     entry_points={
         'console_scripts': [
-            'test = test:main',
+            'server = server:main',
         ],
     },
 )
