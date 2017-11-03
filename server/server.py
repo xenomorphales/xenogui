@@ -1,4 +1,4 @@
-from time import sleep
+import time
 import json
 import os
 
@@ -23,12 +23,25 @@ class TopicsHandler(BaseHandler):
             res.append({'name':t[0],'type':t[1]})
         self.write(json.dumps(res))
 
+class TopicSubscribeHandler(BaseHandler):
+    def sub_cb(self, msg):
+        self.res = msg
+    def get(self, topic):
+        self.res = None
+        sub = BaseHandler.node.create_subscription(String, topic, self.sub_cb)
+        t0 = time.time()
+        while not self.res and time.time()-t0 < 0.5:
+            rclpy.spin_once(BaseHandler.node, timeout_sec=0.1)
+        BaseHandler.node.destroy_subscription(sub)
+        self.write(str(self.res))
+
 def make_app():
     client_path = os.getenv('XENOGUI_CLIENT', ".")
     index_path = os.path.join(client_path, "index.html")
     api_handlers = [
         (r"/nodes", NodesHandler),
         (r"/topics", TopicsHandler),
+        (r"/topic/(.*)", TopicSubscribeHandler),
     ]
     web_handlers = [
         (r"/()", tornado.web.StaticFileHandler, {'path': index_path}),
@@ -41,8 +54,7 @@ def make_app():
 
 def main(args=None):
     rclpy.init(args=args)
-    node = rclpy.create_node('xenogui')
-    BaseHandler.node = node
+    BaseHandler.node = rclpy.create_node('xenogui')
     
     app = make_app()
     app.listen(8888)
