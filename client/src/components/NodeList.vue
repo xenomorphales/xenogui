@@ -1,6 +1,6 @@
 <template>
   <div id="nodelist">
-    <mt-cell v-for="node in nodes" :key="node.name" :title="node.name">{{node.namespace}}{{node.name}}</mt-cell>
+    <mt-cell v-for="node in nodes" :key="node" :title="node">{{node}}</mt-cell>
   </div>
 </template>
 
@@ -10,12 +10,17 @@ export default {
   data() {
       return {
           nodes: [
-              {'name':'node1',  'namespace':'/'},
-              {'name':'node2',  'namespace':'/'},
-              {'name':'mynode', 'namespace':'/'},
-              {'name':'node3',  'namespace':'/'}
+              'none',
           ]
       }
+  },
+  mounted() {
+      var _this = this;
+      setInterval(function() {
+          _this.$http.get('/nodes').then(response => {
+              _this.nodes = response.body;
+          });
+      }, 1000);
   }
 }
 </script>

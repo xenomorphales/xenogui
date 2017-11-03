@@ -18,7 +18,10 @@ class NodesHandler(BaseHandler):
 
 class TopicsHandler(BaseHandler):
     def get(self):
-        self.write(json.dumps(BaseHandler.node.get_topic_names_and_types()))
+        res = []
+        for t in BaseHandler.node.get_topic_names_and_types():
+            res.append({'name':t[0],'type':t[1]})
+        self.write(json.dumps(res))
 
 def make_app():
     client_path = os.getenv('XENOGUI_CLIENT', ".")
