@@ -1,5 +1,6 @@
 from time import sleep
 import json
+import os
 
 import rclpy
 
@@ -20,9 +21,15 @@ class TopicsHandler(BaseHandler):
         self.write(json.dumps(BaseHandler.node.get_topic_names_and_types()))
 
 def make_app():
+    client_path = os.getenv('XENOGUI_CLIENT', ".")
+    index_path = os.path.join(client_path, "index.html")
+    if not os.path.isfile(index_path):
+        print("WARNING : " + index_path + " file not found")
     return tornado.web.Application([
         (r"/nodes", NodesHandler),
         (r"/topics", TopicsHandler),
+        (r"/()", tornado.web.StaticFileHandler, {'path': index_path}),
+        (r"/(.*)", tornado.web.StaticFileHandler, {'path': client_path}),
     ])
 
 def main(args=None):
