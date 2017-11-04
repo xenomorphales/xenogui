@@ -8,9 +8,31 @@ from std_msgs.msg import String
 
 import tornado.ioloop
 import tornado.web
+import tornado.websocket
 
 class BaseHandler(tornado.web.RequestHandler):
     node = None
+
+class WebsocketHandler(tornado.websocket.WebSocketHandler):
+    def sub_cb(self, tname, msg):
+        print("["+tname+"]:"+str(msg))
+        self.write_message(json.dumps({'event':'recv','data':{'name':tname,'msg':str(msg)}}))
+    def open(self):
+        print("WebSocket opened")
+        self.topics = []
+        for t in BaseHandler.node.get_topic_names_and_types():
+            self.topics.append({'name':t[0],'type':t[1]})
+        self.write_message(json.dumps({'event':'list','data':self.topics}))
+        self.subs = []
+        for t in self.topics:
+            self.subs.append(BaseHandler.node.create_subscription(String, t['name'], lambda msg: self.sub_cb(t['name'], msg)))
+    def on_message(self, message):
+        self.write_message(u"You said: " + message)
+    def on_close(self):
+        print("WebSocket closed")
+        for sub in self.subs:
+            BaseHandler.node.destroy_subscription(sub)
+
 
 class NodesHandler(BaseHandler):
     def get(self):
@@ -44,6 +66,7 @@ def make_app():
         (r"/topic/(.*)", TopicSubscribeHandler),
     ]
     web_handlers = [
+        (r"/websocket", WebsocketHandler),
         (r"/()", tornado.web.StaticFileHandler, {'path': index_path}),
         (r"/(.*)", tornado.web.StaticFileHandler, {'path': client_path}),
     ]
@@ -58,6 +81,7 @@ def main(args=None):
     
     app = make_app()
     app.listen(8888)
+    tornado.ioloop.PeriodicCallback(lambda: rclpy.spin_once(BaseHandler.node, timeout_sec=0.1), 100).start()
     tornado.ioloop.IOLoop.current().start()
     
     node.destroy_node()

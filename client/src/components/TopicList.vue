@@ -6,32 +6,33 @@
 
 <script>
 export default {
-  name: 'topiclist',
-  data() {
-      return {
-          topics: [
-              {'name':'none','type':undefined, 'data':undefined}
-          ]
-      }
-  },
-  mounted() {
-      var _this = this;
-      setInterval(function() {
-          _this.$http.get('/topics').then(response => {
-              var topics = response.body;
-              var ok = 0;
-              for(var t in topics) {
-                  _this.$http.get('/topic/'+topics[t].name).then(response => {
-                      topics[t].data = response.body;
-                      ok++;
-                  }, response => { ok++; });
-              }
-              setTimeout(function() {
-                  _this.topics = topics;
-              }, 1000);
-          });
-      }, 1000);
-  }
+    name: 'topiclist',
+    data() {
+        return {
+            topics: [
+                {'name':'none','type':undefined}
+            ]
+        }
+    },
+    mounted() {
+        this.socket = new WebSocket("ws://"+window.location.hostname+":"+window.location.port+"/websocket");
+        var _this = this;
+        this.socket.onmessage = function(evt) {
+            var msg = JSON.parse(evt.data);
+            if(msg.event == 'list') {
+                _this.topics = msg.data;
+            }
+            if(msg.event == 'recv') {
+                var topics = JSON.parse(JSON.stringify(_this.topics));
+                for(var t in topics) {
+                    if(topics[t].name == msg.data.name) {
+                        topics[t].data = msg.data.msg;
+                    }
+                }
+                _this.topics = topics;
+            }
+        };
+    }
 }
 </script>
 
