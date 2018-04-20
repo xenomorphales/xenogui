@@ -25,7 +25,7 @@ class WebsocketHandler(tornado.websocket.WebSocketHandler):
         self.write_message(json.dumps({'event':'list','data':self.topics}))
         self.subs = []
         for t in self.topics:
-            self.subs.append(BaseHandler.node.create_subscription(String, t['name'], lambda msg: self.sub_cb(t['name'], msg)))
+            self.subs.append(BaseHandler.node.create_subscription(String, t['name'], lambda msg, t=t['name']: self.sub_cb(t, msg)))
     def on_message(self, message):
         self.write_message(u"You said: " + message)
     def on_close(self):
